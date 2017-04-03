@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Common.Tasks.Annotations;
+using Prism.Commands;
 
 namespace Common.Tasks
 {

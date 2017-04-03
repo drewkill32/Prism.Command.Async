@@ -52,7 +52,6 @@
     <Compile Include="CancelCommand.cs" />
     <Compile Include="DelegateCommandAsync.cs" />
     <Compile Include="DelegateCommandAsync{T}.cs" />
-    <Compile Include="DelegateCommandBase.cs" />
     <Compile Include="IAsyncCommand.cs" />
     <Compile Include="NotifyTaskExtenstions.cs" />
     <Compile Include="ObservableTask.cs" />
