@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,10 +6,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Common.Tasks;
 using Common.Tasks.Annotations;
 using Prism.Commands;
 
-namespace Common.Tasks
+// ReSharper disable once CheckNamespace
+namespace Prism.Commands
 {
     /// <summary>
     /// An <see cref="ICommand"/> whose delegates can be attached for <see cref="Execute"/> and <see cref="CanExecute"/>.
@@ -38,40 +39,24 @@ namespace Common.Tasks
     /// </remarks>
     public class DelegateCommandAsync<T> : DelegateCommandBase,INotifyPropertyChanged
     {
+        private readonly Func<CancellationToken,Task<T>> executeMethod;
+        private ObservableTask<T> observableTask;
+        private Func<T, bool> canExecuteMethod;
+        private CancelObservableTaskCommand cancelCommand;
 
-        #region Fields
-
-        readonly Func<CancellationToken, Task<T>> _executeMethod;
-        Func<T, bool> _canExecuteMethod;
-        private readonly CancelAsyncCommand cancelCommand;
-        private ObservableTask<T> execution;
-        private bool isRunning;
-
-        #endregion Fields
-
-        #region Properties
-
-        public bool IsRunning
+        public ObservableTask<T> ObservableTask
         {
-            get { return isRunning; }
+            get { return observableTask; }
             set
             {
-                Set(ref isRunning, value);
-                if (!Equals(isRunning, value))
-                    RaiseCanExecuteChanged();
+                if (observableTask == value) return;
+                observableTask = value;
+                OnPropertyChanged();
             }
         }
 
-        public ICommand CancelCommand => cancelCommand;
 
-
-        public ObservableTask<T> Execution
-        {
-            get { return execution; }
-            set { Set(ref execution, value); }
-        }
-
-        #endregion Properties
+        public CancelObservableTaskCommand CancelCommand => cancelCommand;
 
 
         /// <summary>
@@ -79,7 +64,7 @@ namespace Common.Tasks
         /// </summary>
         /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
         /// <remarks><see cref="CanExecute"/> will always return true.</remarks>
-        public DelegateCommandAsync(Func<CancellationToken, Task<T>> executeMethod)
+        public DelegateCommandAsync(Func<CancellationToken,Task<T>> executeMethod)
             : this(executeMethod, (o) => true)
         {
         }
@@ -90,11 +75,11 @@ namespace Common.Tasks
         /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
         /// <param name="canExecuteMethod">Delegate to execute when CanExecute is called on the command. This can be null.</param>
         /// <exception cref="ArgumentNullException">When both <paramref name="executeMethod"/> and <paramref name="canExecuteMethod"/> ar <see langword="null" />.</exception>
-        public DelegateCommandAsync(Func<CancellationToken, Task<T>> executeMethod, Func<T, bool> canExecuteMethod)
+        public DelegateCommandAsync(Func<CancellationToken,Task<T>> executeMethod, Func<T, bool> canExecuteMethod)
             : base()
         {
             if (executeMethod == null || canExecuteMethod == null)
-                throw new ArgumentNullException(nameof(executeMethod), "DelegateCommand delegates cannot be null");
+                throw new ArgumentNullException(nameof(executeMethod),"DelegateCommand Delegates Cannot Be Null");
 
             TypeInfo genericTypeInfo = typeof(T).GetTypeInfo();
 
@@ -104,23 +89,33 @@ namespace Common.Tasks
             {
                 if ((!genericTypeInfo.IsGenericType) || (!typeof(Nullable<>).GetTypeInfo().IsAssignableFrom(genericTypeInfo.GetGenericTypeDefinition().GetTypeInfo())))
                 {
-                    throw new InvalidCastException("DelegateCommandInvalidGenericPayloadType");
+                    throw new InvalidCastException("DelegateCommand Invalid Generic Payload Type");
                 }
             }
-
-            _executeMethod = executeMethod;
-            cancelCommand = new CancelAsyncCommand(RaiseCanExecuteChanged);
-            OnPropertyChanged(nameof(CancelCommand));
-            _canExecuteMethod = canExecuteMethod;
+            cancelCommand = new CancelObservableTaskCommand(RaiseCanExecuteChanged);
+            this.executeMethod = executeMethod;
+            this.canExecuteMethod = canExecuteMethod;
         }
 
         ///<summary>
-        ///Executes the command and invokes the <see cref="Action{T}"/> provided during construction.
+        ///Executes the command and invokes the <see cref="Action{Task{T}}"/> provided during construction.
         ///</summary>
         ///<param name="parameter">Data used by the command.</param>
-        public async void Execute(T parameter)
+        public void Execute(T parameter)
         {
-            await ExecuteAsync(parameter);
+            executeMethod(parameter);
+        }
+
+        /// <summary>
+        /// Executes the command asynchronously and involes the 
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public async Task ExecuteAsync(T parameter)
+        {
+            ObservableTask = new ObservableTask<T>(executeMethod(cancelCommand.Token));
+            RaiseCanExecuteChanged();
+            await ObservableTask.TaskCompletion;
         }
 
         ///<summary>
@@ -132,7 +127,7 @@ namespace Common.Tasks
         ///</returns>
         public bool CanExecute(T parameter)
         {
-            return _canExecuteMethod(parameter);
+            return canExecuteMethod(parameter);
         }
 
         protected override void Execute(object parameter)
@@ -143,18 +138,6 @@ namespace Common.Tasks
         protected override bool CanExecute(object parameter)
         {
             return CanExecute((T)parameter);
-        }
-
-
-        public async Task ExecuteAsync(T parameter)
-        {
-            cancelCommand.NotifyCommandStarting();
-            IsRunning = true;
-            Execution = new ObservableTask<T>(_executeMethod(cancelCommand.Token));
-            if (Execution.TaskCompletion != null)
-                await Execution.TaskCompletion;
-            cancelCommand.NotifyCommandFinished();
-            IsRunning = false;
         }
 
         /// <summary>
@@ -177,13 +160,10 @@ namespace Common.Tasks
         public DelegateCommandAsync<T> ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
             Expression<Func<T, bool>> expression = Expression.Lambda<Func<T, bool>>(canExecuteExpression.Body, Expression.Parameter(typeof(T), "o"));
-            _canExecuteMethod = expression.Compile();
+            canExecuteMethod = expression.Compile();
             ObservesPropertyInternal(canExecuteExpression);
             return this;
         }
-
-
-        #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -191,17 +171,6 @@ namespace Common.Tasks
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         }
-
-        protected bool Set<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        #endregion INotifyPropertyChanged
     }
 }

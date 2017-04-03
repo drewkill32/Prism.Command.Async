@@ -7,9 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace Common.Tasks
+// ReSharper disable once CheckNamespace
+namespace Prism.Commands
 {
-    public sealed class CancelAsyncCommand : ICommand, INotifyPropertyChanged
+    public sealed class CancelObservableTaskCommand : ICommand, INotifyPropertyChanged
     {
         private readonly Action raiseCanExecuteChanged;
 
@@ -17,7 +18,7 @@ namespace Common.Tasks
         private bool commandExecuting;
 
 
-        public CancelAsyncCommand(Action raiseCanExecuteChanged)
+        public CancelObservableTaskCommand(Action raiseCanExecuteChanged)
         {
             this.raiseCanExecuteChanged = raiseCanExecuteChanged;
         }
@@ -48,13 +49,13 @@ namespace Common.Tasks
             if (!cts.IsCancellationRequested)
                 return;
             cts = new CancellationTokenSource();
-            raiseCanExecuteChanged();
+            raiseCanExecuteChanged?.Invoke();
         }
 
         public void NotifyCommandFinished()
         {
             CommandExecuting = false;
-            raiseCanExecuteChanged();
+            raiseCanExecuteChanged?.Invoke();
         }
 
         bool ICommand.CanExecute(object parameter)
@@ -65,7 +66,7 @@ namespace Common.Tasks
         void ICommand.Execute(object parameter)
         {
             cts.Cancel();
-            raiseCanExecuteChanged();
+            raiseCanExecuteChanged?.Invoke();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

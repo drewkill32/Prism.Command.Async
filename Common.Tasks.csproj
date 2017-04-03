@@ -47,19 +47,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncCommand.cs" />
-    <Compile Include="AsyncCommandBase.cs" />
-    <Compile Include="CancelCommand.cs" />
+    <Compile Include="CancelObservableTaskCommand.cs" />
+    <Compile Include="CancelObservableTask.cs" />
     <Compile Include="DelegateCommandAsync.cs" />
     <Compile Include="DelegateCommandAsync{T}.cs" />
-    <Compile Include="IAsyncCommand.cs" />
-    <Compile Include="NotifyTaskExtenstions.cs" />
     <Compile Include="ObservableTask.cs" />
-    <Compile Include="ObservableTaskBase.cs" />
-    <Compile Include="ObservableTaskTResult.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertyProgress.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
