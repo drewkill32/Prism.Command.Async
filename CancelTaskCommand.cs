@@ -1,26 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
-// ReSharper disable once CheckNamespace
-namespace Prism.Commands
+namespace Prism.Commands.Async
 {
-    public sealed class CancelObservableTaskCommand : ICommand, INotifyPropertyChanged
+    public sealed class CancelTaskCommand : ICommand, INotifyPropertyChanged
     {
-        private readonly Action raiseCanExecuteChanged;
+
 
         private CancellationTokenSource cts = new CancellationTokenSource();
         private bool commandExecuting;
 
 
-        public CancelObservableTaskCommand(Action raiseCanExecuteChanged)
+        public CancelTaskCommand()
         {
-            this.raiseCanExecuteChanged = raiseCanExecuteChanged;
         }
 
 
@@ -46,16 +41,17 @@ namespace Prism.Commands
         public void NotifyCommandStarting()
         {
             CommandExecuting = true;
-            if (!cts.IsCancellationRequested)
-                return;
-            cts = new CancellationTokenSource();
-            raiseCanExecuteChanged?.Invoke();
+            if (cts.IsCancellationRequested)
+                cts = new CancellationTokenSource();
+            RaiseCanExecuteChanged();
+
         }
 
         public void NotifyCommandFinished()
         {
             CommandExecuting = false;
-            raiseCanExecuteChanged?.Invoke();
+
+            RaiseCanExecuteChanged();
         }
 
         bool ICommand.CanExecute(object parameter)
@@ -66,7 +62,12 @@ namespace Prism.Commands
         void ICommand.Execute(object parameter)
         {
             cts.Cancel();
-            raiseCanExecuteChanged?.Invoke();
+            RaiseCanExecuteChanged();
+        }
+
+        private void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this,EventArgs.Empty);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -5,14 +5,16 @@ using System.Threading.Tasks;
 
 namespace Prism.Commands.Async
 {
-    public sealed class ObservableTask: INotifyPropertyChanged
+    public sealed class ObservableTask<TResult> : INotifyPropertyChanged
     {
 
 
 
         #region Properites
 
-        public Task Task { get; }
+        public Task<TResult> Task { get; }
+        public TResult Result => (Task.Status == TaskStatus.RanToCompletion) ?
+            Task.Result : default(TResult);
         public TaskStatus Status => Task.Status;
         public bool IsCompleted => Task.IsCompleted;
         public bool IsNotCompleted => !Task.IsCompleted;
@@ -30,7 +32,7 @@ namespace Prism.Commands.Async
 
         #endregion Properites
 
-        public ObservableTask(Task task)
+        public ObservableTask(Task<TResult> task)
         {
             Task = task;
             TaskCompletion = WatchTaskAsync(task);

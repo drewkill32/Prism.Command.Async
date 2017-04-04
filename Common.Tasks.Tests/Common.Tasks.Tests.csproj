@@ -80,9 +80,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common.Tasks.csproj">
+    <ProjectReference Include="..\Prism.Commands.Async.csproj">
       <Project>{8cde0fe2-8455-4527-893d-b042d1b7d8d5}</Project>
-      <Name>Common.Tasks</Name>
+      <Name>Prism.Commands.Async</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

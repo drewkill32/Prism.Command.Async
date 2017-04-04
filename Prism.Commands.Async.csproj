@@ -7,8 +7,8 @@
     <ProjectGuid>{8CDE0FE2-8455-4527-893D-B042D1B7D8D5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common.Tasks</RootNamespace>
-    <AssemblyName>Common.Tasks</AssemblyName>
+    <RootNamespace>Prism.Commands.Async</RootNamespace>
+    <AssemblyName>Prism.Commands.Async</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -47,11 +47,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CancelObservableTaskCommand.cs" />
-    <Compile Include="CancelObservableTask.cs" />
+    <Compile Include="CancelTaskCommand.cs" />
     <Compile Include="DelegateCommandAsync.cs" />
     <Compile Include="DelegateCommandAsync{T}.cs" />
     <Compile Include="ObservableTask.cs" />
+    <Compile Include="ObservableTask{T}.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
