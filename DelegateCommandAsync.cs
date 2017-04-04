@@ -1,172 +1,186 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.ComponentModel;
-//using System.Linq.Expressions;
-//using System.Runtime.CompilerServices;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Windows.Input;
-//using Common.Tasks.Annotations;
-//using Prism.Commands;
+﻿using System;
+using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Common.Tasks.Annotations;
 
-//namespace Common.Tasks
-//{
-//    /// <summary>
-//    /// An <see cref="Execute"/> whose delegates do not take any parameters for <see cref="CanExecute"/> and <see cref="DelegateCommandBase"/>.
-//    /// </summary>
-//    /// <see cref="DelegateCommand{T}"/>
-//    /// <see cref="ICommand"/>
-//    public class DelegateCommandAsync : DelegateCommandBase, INotifyPropertyChanged
-//    {
-//        #region Fields
+namespace Prism.Commands.Async
+{
+    /// <summary>
+    /// An <see cref="ICommand"/> whose delegates can be attached for <see cref="Execute"/> and <see cref="CanExecute"/>.
+    /// </summary>
+    /// <typeparam name="T">Parameter type.</typeparam>
+    /// <remarks>
+    /// The constructor deliberately prevents the use of value types.
+    /// Because ICommand takes an object, having a value type for T would cause unexpected behavior when CanExecute(null) is called during XAML initialization for command bindings.
+    /// Using default(T) was considered and rejected as a solution because the implementor would not be able to distinguish between a valid and defaulted values.
+    /// <para/>
+    /// Instead, callers should support a value type by using a nullable value type and checking the HasValue property before using the Value property.
+    /// <example>
+    ///     <code>
+    /// public MyClass()
+    /// {
+    ///     this.submitCommand = new DelegateCommand&lt;int?&gt;(this.Submit, this.CanSubmit);
+    /// }
+    /// 
+    /// private bool CanSubmit(int? customerId)
+    /// {
+    ///     return (customerId.HasValue &amp;&amp; customers.Contains(customerId.Value));
+    /// }
+    ///     </code>
+    /// </example>
+    /// </remarks>
+    public class DelegateCommandAsync : DelegateCommandBase, INotifyPropertyChanged
+    {
+        private readonly Func<CancellationToken, Task> executeMethod;
+        private ObservableTask observableTask;
+        private Func<bool> canExecuteMethod;
+        private readonly CancelTaskCommand cancelCommand;
 
-//        private readonly Func<CancellationToken, Task> executeMethod;
-//        private Func<bool> canExecuteMethod;
-//        private ObservableTask execution;
-//        private bool isRunning;
+        public ObservableTask ObservableTask
+        {
+            get { return observableTask; }
+            set
+            {
+                if (observableTask == value) return;
+                observableTask = value;
+                OnPropertyChanged();
+                RaiseCanExecuteChanged();
+            }
+        }
 
-//        #endregion Fields
-
-//        #region Properties
-
-//        public bool IsRunning
-//        {
-//            get { return isRunning; }
-//            private set
-//            {
-//                Set(ref isRunning, value);
-//                if (Equals(isRunning, value)) return;
-//                RaiseCanExecuteChanged();
-
-//            }
-//        }
-
-
-
-//        public ObservableTask Execution
-//        {
-//            get { return execution; }
-//            set { Set(ref execution, value); }
-//        }
-
-//        #endregion Properties
-
-
-
-//        /// <summary>
-//        /// Creates a new instance of <see cref="DelegateCommandAsync"/> with the <see cref="Action"/> to invoke on execution.
-//        /// </summary>
-//        /// <param name="executeMethod">The <see cref="Action"/> to invoke when <see cref="ICommand.Execute"/> is called.</param>
-//        public DelegateCommandAsync(Func<CancellationToken, Task> executeMethod)
-//            : this(executeMethod, () => true)
-//        {
-
-//        }
-
-//        /// <summary>
-//        /// Creates a new instance of <see cref="DelegateCommandAsync"/> with the <see cref="Action"/> to invoke on execution
-//        /// and a <see langword="Func" /> to query for determining if the command can execute.
-//        /// </summary>
-//        /// <param name="executeMethod">The <see cref="Action"/> to invoke when <see cref="ICommand.Execute"/> is called.</param>
-//        /// <param name="canExecuteMethod">The <see cref="Func{TResult}"/> to invoke when <see cref="ICommand.CanExecute"/> is called</param>
-//        public DelegateCommandAsync(Func<CancellationToken, Task> executeMethod, Func<bool> canExecuteMethod)
-//            : base()
-//        {
-//            if (executeMethod == null || canExecuteMethod == null)
-//                throw new ArgumentNullException(nameof(executeMethod), "DelegateCommand delegates cannot be null");
-
-//            this.executeMethod = executeMethod;
-//            cancelCommand = new CancelAsyncCommand(RaiseCanExecuteChanged);
-//            OnPropertyChanged(nameof(CancelCommand));
-//            this.canExecuteMethod = canExecuteMethod;
-//        }
-
-//        ///<summary>
-//        /// Executes the command.
-//        ///</summary>
-//        public async void Execute()
-//        {
-//            await ExecuteAsync();
-//        }
-
-//        /// <summary>
-//        /// Executes the command async. returns an awaitable Task
-//        /// </summary>
-//        /// <returns></returns>
-//        public async Task ExecuteAsync()
-//        {
-//            IsRunning = true;
-//            Execution = new ObservableTask(executeMethod(cancelCommand.Token));
-//            if (Execution.TaskCompletion != null)
-//                await Execution.TaskCompletion;
-//            IsRunning = false;
-//        }
-
-//        /// <summary>
-//        /// Determines if the command can be executed.
-//        /// </summary>
-//        /// <returns>Returns <see langword="true"/> if the command can execute,otherwise returns <see langword="false"/>.</returns>
-//        public bool CanExecute()
-//        {
-//            return canExecuteMethod() && !IsRunning;
-//        }
-
-//        protected override void Execute(object parameter)
-//        {
-//            Execute();
-//        }
-
-//        protected override bool CanExecute(object parameter)
-//        {
-//            return CanExecute();
-//        }
-
-//        /// <summary>
-//        /// Observes a property that implements INotifyPropertyChanged, and automatically calls DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
-//        /// </summary>
-//        /// <typeparam name="T">The object type containing the property specified in the expression.</typeparam>
-//        /// <param name="propertyExpression">The property expression. Example: ObservesProperty(() => PropertyName).</param>
-//        /// <returns>The current instance of DelegateCommand</returns>
-//        public DelegateCommandAsync ObservesProperty<T>(Expression<Func<T>> propertyExpression)
-//        {
-//            ObservesPropertyInternal(propertyExpression);
-//            return this;
-//        }
-
-//        /// <summary>
-//        /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
-//        /// </summary>
-//        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute(() => PropertyName).</param>
-//        /// <returns>The current instance of DelegateCommand</returns>
-//        public DelegateCommandAsync ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
-//        {
-//            canExecuteMethod = canExecuteExpression.Compile();
-//            ObservesPropertyInternal(canExecuteExpression);
-//            return this;
-//        }
+        public bool ThrowException { get; set; }
 
 
 
+        private bool isExecuting;
 
-//        #region INotifyPropertyChanged
+        public bool IsExecuting
+        {
+            get { return isExecuting; }
+            private set
+            {
+                if (isExecuting == value) return;
+                isExecuting = value;
+                OnPropertyChanged();
+                RaiseCanExecuteChanged();
+                if (isExecuting)
+                    cancelCommand.NotifyCommandStarting();
+                else
+                    cancelCommand.NotifyCommandFinished();
+            }
+        }
 
-//        public event PropertyChangedEventHandler PropertyChanged;
+        public CancelTaskCommand CancelCommand => cancelCommand;
 
-//        [NotifyPropertyChangedInvocator]
-//        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-//        {
-//            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-//        }
+        /// <summary>
+        /// Initializes a new instance of <see cref="DelegateCommandAsync{T}"/>.
+        /// </summary>
+        /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
+        /// <remarks><see cref="CanExecute"/> will always return true.</remarks>
+        public DelegateCommandAsync(Func<CancellationToken, Task> executeMethod)
+            : this(executeMethod, ()=> true)
+        {
+        }
 
-//        protected bool Set<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-//        {
-//            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-//            field = value;
-//            OnPropertyChanged(propertyName);
-//            return true;
-//        }
+        /// <summary>
+        /// Initializes a new instance of <see cref="DelegateCommandAsync{T}"/>.
+        /// </summary>
+        /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
+        /// <param name="canExecuteMethod">Delegate to execute when CanExecute is called on the command. This can be null.</param>
+        /// <exception cref="ArgumentNullException">When both <paramref name="executeMethod"/> and <paramref name="canExecuteMethod"/> ar <see langword="null" />.</exception>
+        public DelegateCommandAsync(Func< CancellationToken, Task> executeMethod, Func< bool> canExecuteMethod)
+            : base()
+        {
+            if (executeMethod == null || canExecuteMethod == null)
+                throw new ArgumentNullException(nameof(executeMethod), "DelegateCommand Delegates Cannot Be Null");
 
-//        #endregion INotifyPropertyChanged
-//    }
-//}
+
+            cancelCommand = new CancelTaskCommand();
+            this.executeMethod = executeMethod;
+            this.canExecuteMethod = canExecuteMethod;
+        }
+
+
+
+        /// <summary>
+        /// Executes the command asynchronously and involves the 
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public async Task ExecuteAsync()
+        {
+            IsExecuting = true;
+            ObservableTask = new ObservableTask(executeMethod(cancelCommand.Token)){ThrowException = this.ThrowException};
+            await ObservableTask.TaskCompletion;
+            IsExecuting = false;
+        }
+
+
+        public void ThrowIfFaulted()
+        {
+            if (ObservableTask == null)
+                return;
+            if (ObservableTask.IsFaulted)
+                throw ObservableTask.Exception;
+        }
+
+        public bool CanExecute()
+        {
+            return CanExecute(null);
+        }
+
+        public async void Execute()
+        {
+            await ExecuteAsync();
+        }
+
+
+        protected override async void Execute(object parameter)
+        {
+            await ExecuteAsync();
+        }
+
+        protected override bool CanExecute(object parameter)
+        {
+            return canExecuteMethod() && !IsExecuting;
+        }
+
+        /// <summary>
+        /// Observes a property that implements INotifyPropertyChanged, and automatically calls DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// </summary>
+        /// <typeparam name="TType">The type of the return value of the method that this delegate encapulates</typeparam>
+        /// <param name="propertyExpression">The property expression. Example: ObservesProperty(() => PropertyName).</param>
+        /// <returns>The current instance of DelegateCommand</returns>
+        public DelegateCommandAsync ObservesProperty<TType>(Expression<Func<TType>> propertyExpression)
+        {
+            ObservesPropertyInternal(propertyExpression);
+            return this;
+        }
+
+        /// <summary>
+        /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// </summary>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute(() => PropertyName).</param>
+        /// <returns>The current instance of DelegateCommand</returns>
+        public DelegateCommandAsync ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
+        {
+            Expression<Func<bool>> expression = Expression.Lambda<Func<bool>>(canExecuteExpression.Body);
+            canExecuteMethod = expression.Compile();
+            ObservesPropertyInternal(canExecuteExpression);
+            return this;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

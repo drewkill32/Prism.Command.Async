@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Prism.Commands;
+using Prism.Commands.Async;
 using Prism.Mvvm;
 using Xunit;
 using Assert = Xunit.Assert;

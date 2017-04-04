@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Prism.Commands;
+using Prism.Commands.Async;
 using Xunit;
 using Assert = Xunit.Assert;
 
