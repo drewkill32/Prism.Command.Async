@@ -38,7 +38,7 @@ namespace Prism.Commands.Async
         private readonly Func<CancellationToken, Task> executeMethod;
         private ObservableTask observableTask;
         private Func<bool> canExecuteMethod;
-        private CancelTaskCommand cancelCommand;
+        private readonly CancelTaskCommand cancelCommand;
 
         public ObservableTask ObservableTask
         {
@@ -108,7 +108,7 @@ namespace Prism.Commands.Async
 
 
         /// <summary>
-        /// Executes the command asynchronously and involes the 
+        /// Executes the command asynchronously and involves the 
         /// </summary>
         /// <param name="parameter"></param>
         /// <returns></returns>
@@ -127,6 +127,16 @@ namespace Prism.Commands.Async
                 return;
             if (ObservableTask.IsFaulted)
                 throw ObservableTask.Exception;
+        }
+
+        public bool CanExecute()
+        {
+            return CanExecute(null);
+        }
+
+        public async void Execute()
+        {
+            await ExecuteAsync();
         }
 
 

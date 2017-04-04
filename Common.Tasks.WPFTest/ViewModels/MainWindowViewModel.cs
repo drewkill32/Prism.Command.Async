@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using Prism.Commands;
 using Prism.Commands.Async;
@@ -21,10 +22,24 @@ namespace Common.Tasks.WPFTest.ViewModels
             set { SetProperty(ref _title, value); }
         }
 
+       
+
+        public bool ThrowException
+        {
+            get { return AsyncCommand?.ThrowException ?? false; }
+            set
+            {
+                if (AsyncCommand.ThrowException == value) return;
+                AsyncCommand.ThrowException = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public MainWindowViewModel()
         {
-            AsyncCommand = new DelegateCommandAsync(AsyncTest) {ThrowException = true};
-            
+            AsyncCommand = new DelegateCommandAsync(AsyncTest);
+
+
         }
 
         private async Task AsyncTest(CancellationToken arg)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Prism.Commands.Async
@@ -20,6 +21,7 @@ namespace Prism.Commands.Async
         public bool IsNotCompleted => !Task.IsCompleted;
         public bool IsSuccessfullyCompleted => Task.Status ==
                                                TaskStatus.RanToCompletion;
+        public CancelTaskCommand CancelCommand { get; }
 
         public bool IsCanceled => Task.IsCanceled;
         public bool IsFaulted => Task.IsFaulted;
@@ -38,12 +40,21 @@ namespace Prism.Commands.Async
             TaskCompletion = WatchTaskAsync(task);
         }
 
+        public ObservableTask(Func<CancellationToken, Task<TResult>> executeMethod)
+        {
+            CancelCommand = new CancelTaskCommand();
+            Task = executeMethod(CancelCommand.Token);
+            TaskCompletion = WatchTaskAsync(Task);
+        }
+
 
         private async Task WatchTaskAsync(Task task)
         {
             try
             {
+                CancelCommand.NotifyCommandStarting();
                 await task;
+                CancelCommand.NotifyCommandFinished();
             }
             catch (Exception ex)
             {
