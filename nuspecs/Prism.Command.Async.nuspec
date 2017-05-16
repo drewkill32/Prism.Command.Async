@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Prism.Commands.Async</id>
+    <version>1.0.0</version>
+    <authors>Drew Killion</authors>
+    <owners>Drew Killion</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Async DelegateCommand for Prism</description>
+    <releaseNotes>Init Package.</releaseNotes>
+    <copyright>Copyright 2017</copyright>
+    <tags>Prism Async</tags>
+    <dependencies>
+      <dependency id="Prism.Wpf" version="6.3.0" />
+    </dependencies>
+  </metadata>
+  <files>
+        <file src="..\bin\Release\Prism.Commands.Async.dll" target="lib\net451\Prism.Commands.Async.dll" />
+        <file src="..\bin\Release\Prism.Commands.Async.pdb" target="lib\net451\Prism.Commands.Async.pdb" />
+		<file src="..\bin\Release\Prism.Commands.Async.dll" target="lib\net452\Prism.Commands.Async.dll" />
+        <file src="..\bin\Release\Prism.Commands.Async.pdb" target="lib\net452\Prism.Commands.Async.pdb" />
+    </files>
+</package>
