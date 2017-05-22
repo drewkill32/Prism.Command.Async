@@ -65,6 +65,11 @@ namespace Prism.Commands.Async
             RaiseCanExecuteChanged();
         }
 
+        public void Cancel()
+        {
+            (this as ICommand).Execute(null);
+        }
+
         private void RaiseCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this,EventArgs.Empty);

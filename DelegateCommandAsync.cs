@@ -74,6 +74,11 @@ namespace Prism.Commands.Async
             }
         }
 
+        public void Cancel()
+        {
+            CancelCommand?.Cancel();
+        }
+
         public CancelTaskCommand CancelCommand => cancelCommand;
 
 

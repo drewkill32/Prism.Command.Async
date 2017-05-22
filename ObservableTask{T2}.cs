@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Prism.Commands.Async
 {
-    public sealed class ObservableTask: INotifyPropertyChanged
+    public sealed class ObservableTask<TParam> : INotifyPropertyChanged
     {
 
 
 
-        #region Properites
+        #region Properties
 
         public Task Task { get; }
         public CancelTaskCommand CancelCommand { get; }
@@ -36,6 +36,13 @@ namespace Prism.Commands.Async
         {
             Task = task;
             TaskCompletion = WatchTaskAsync(task);
+        }
+
+        public ObservableTask(Func<TParam, CancellationToken, Task> executeMethod, TParam obj)
+        {
+            CancelCommand = new CancelTaskCommand();
+            Task = executeMethod(obj, CancelCommand.Token);
+            TaskCompletion = WatchTaskAsync(Task);
         }
 
 

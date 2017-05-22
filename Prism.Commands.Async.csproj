@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Prism.Commands.Async</RootNamespace>
     <AssemblyName>Prism.Commands.Async</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,6 +51,7 @@
     <Compile Include="CancelTaskCommand.cs" />
     <Compile Include="DelegateCommandAsync.cs" />
     <Compile Include="DelegateCommandAsync{T}.cs" />
+    <Compile Include="ObservableTask{T2}.cs" />
     <Compile Include="ObservableTask.cs" />
     <Compile Include="ObservableTask{T}.cs" />
     <Compile Include="Properties\Annotations.cs" />
