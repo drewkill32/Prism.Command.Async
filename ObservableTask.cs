@@ -8,6 +8,7 @@ namespace Prism.Commands.Async
 {
     public sealed class ObservableTask: INotifyPropertyChanged
     {
+        private Func<CancelTaskCommand, Task> getUsers;
 
 
 
@@ -38,6 +39,12 @@ namespace Prism.Commands.Async
             TaskCompletion = WatchTaskAsync(task);
         }
 
+        public ObservableTask(Func<CancellationToken, Task> executeMethod)
+        {
+            CancelCommand = new CancelTaskCommand();
+            Task = executeMethod(CancelCommand.Token);
+            TaskCompletion = WatchTaskAsync(Task);
+        }
 
 
         private async Task WatchTaskAsync(Task task)
