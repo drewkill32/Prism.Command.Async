@@ -25,7 +25,7 @@ namespace Prism.Commands.Async
     /// {
     ///     this.submitCommand = new DelegateCommand&lt;int?&gt;(this.Submit, this.CanSubmit);
     /// }
-    /// 
+    ///
     /// private bool CanSubmit(int? customerId)
     /// {
     ///     return (customerId.HasValue &amp;&amp; customers.Contains(customerId.Value));
@@ -33,54 +33,19 @@ namespace Prism.Commands.Async
     ///     </code>
     /// </example>
     /// </remarks>
-    public class DelegateCommandAsync : DelegateCommandBase, INotifyPropertyChanged
+    public class DelegateCommandAsync : DelegateCommandAsyncBase
     {
+        #region Private Fields
+
+
         private readonly Func<CancellationToken, Task> executeMethod;
-        private ObservableTask observableTask;
         private Func<bool> canExecuteMethod;
-        private readonly CancelTaskCommand cancelCommand;
-
-        public ObservableTask ObservableTask
-        {
-            get { return observableTask; }
-            set
-            {
-                if (observableTask == value) return;
-                observableTask = value;
-                OnPropertyChanged();
-                RaiseCanExecuteChanged();
-            }
-        }
-
-        public bool ThrowException { get; set; }
 
 
+        #endregion Private Fields
 
-        private bool isExecuting;
-
-        public bool IsExecuting
-        {
-            get { return isExecuting; }
-            private set
-            {
-                if (isExecuting == value) return;
-                isExecuting = value;
-                OnPropertyChanged();
-                RaiseCanExecuteChanged();
-                if (isExecuting)
-                    cancelCommand.NotifyCommandStarting();
-                else
-                    cancelCommand.NotifyCommandFinished();
-            }
-        }
-
-        public void Cancel()
-        {
-            CancelCommand?.Cancel();
-        }
-
-        public CancelTaskCommand CancelCommand => cancelCommand;
-
+        
+        #region Public Constructors
 
         /// <summary>
         /// Initializes a new instance of <see cref="DelegateCommandAsync{T}"/>.
@@ -88,7 +53,7 @@ namespace Prism.Commands.Async
         /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
         /// <remarks><see cref="CanExecute"/> will always return true.</remarks>
         public DelegateCommandAsync(Func<CancellationToken, Task> executeMethod)
-            : this(executeMethod, ()=> true)
+            : this(executeMethod, () => true)
         {
         }
 
@@ -98,45 +63,27 @@ namespace Prism.Commands.Async
         /// <param name="executeMethod">Delegate to execute when Execute is called on the command. This can be null to just hook up a CanExecute delegate.</param>
         /// <param name="canExecuteMethod">Delegate to execute when CanExecute is called on the command. This can be null.</param>
         /// <exception cref="ArgumentNullException">When both <paramref name="executeMethod"/> and <paramref name="canExecuteMethod"/> ar <see langword="null" />.</exception>
-        public DelegateCommandAsync(Func< CancellationToken, Task> executeMethod, Func< bool> canExecuteMethod)
+        public DelegateCommandAsync(Func<CancellationToken, Task> executeMethod, Func<bool> canExecuteMethod)
             : base()
         {
             if (executeMethod == null || canExecuteMethod == null)
                 throw new ArgumentNullException(nameof(executeMethod), "DelegateCommand Delegates Cannot Be Null");
-
 
             cancelCommand = new CancelTaskCommand();
             this.executeMethod = executeMethod;
             this.canExecuteMethod = canExecuteMethod;
         }
 
+        #endregion Public Constructors
 
 
-        /// <summary>
-        /// Executes the command asynchronously and involves the 
-        /// </summary>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public async Task ExecuteAsync()
-        {
-            IsExecuting = true;
-            ObservableTask = new ObservableTask(executeMethod(cancelCommand.Token)){ThrowException = this.ThrowException};
-            await ObservableTask.TaskCompletion;
-            IsExecuting = false;
-        }
+        #region Public Methods
 
 
-        public void ThrowIfFaulted()
-        {
-            if (ObservableTask == null)
-                return;
-            if (ObservableTask.IsFaulted)
-                throw ObservableTask.Exception;
-        }
 
         public bool CanExecute()
         {
-            return CanExecute(null);
+            return CanExecute(null) && !IsExecuting;
         }
 
         public async void Execute()
@@ -144,27 +91,17 @@ namespace Prism.Commands.Async
             await ExecuteAsync();
         }
 
-
-        protected override async void Execute(object parameter)
-        {
-            await ExecuteAsync();
-        }
-
-        protected override bool CanExecute(object parameter)
-        {
-            return canExecuteMethod() && !IsExecuting;
-        }
-
         /// <summary>
-        /// Observes a property that implements INotifyPropertyChanged, and automatically calls DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// Executes the command asynchronously and involves the
         /// </summary>
-        /// <typeparam name="TType">The type of the return value of the method that this delegate encapulates</typeparam>
-        /// <param name="propertyExpression">The property expression. Example: ObservesProperty(() => PropertyName).</param>
-        /// <returns>The current instance of DelegateCommand</returns>
-        public DelegateCommandAsync ObservesProperty<TType>(Expression<Func<TType>> propertyExpression)
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public async Task ExecuteAsync()
         {
-            ObservesPropertyInternal(propertyExpression);
-            return this;
+            IsExecuting = true;
+            ObservableTask = new ObservableTask(executeMethod(CancelCommand.Token)) { ThrowException = this.ThrowException };
+            await ObservableTask.TaskCompletion;
+            IsExecuting = false;
         }
 
         /// <summary>
@@ -180,12 +117,35 @@ namespace Prism.Commands.Async
             return this;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <summary>
+        /// Observes a property that implements INotifyPropertyChanged, and automatically calls DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// </summary>
+        /// <typeparam name="TType">The type of the return value of the method that this delegate encapulates</typeparam>
+        /// <param name="propertyExpression">The property expression. Example: ObservesProperty(() => PropertyName).</param>
+        /// <returns>The current instance of DelegateCommand</returns>
+        public DelegateCommandAsync ObservesProperty<TType>(Expression<Func<TType>> propertyExpression)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            ObservesPropertyInternal(propertyExpression);
+            return this;
         }
+
+
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected override bool CanExecute(object parameter)
+        {
+            return canExecuteMethod() && !IsExecuting;
+        }
+
+        protected override async void Execute(object parameter)
+        {
+            await ExecuteAsync();
+        }
+
+
+        #endregion Protected Methods
     }
 }

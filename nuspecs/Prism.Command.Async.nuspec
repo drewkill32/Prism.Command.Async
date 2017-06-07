@@ -15,9 +15,9 @@
     </dependencies>
   </metadata>
   <files>
-        <file src="..\bin\Release\Prism.Commands.Async.dll" target="lib\net451\Prism.Commands.Async.dll" />
-        <file src="..\bin\Release\Prism.Commands.Async.pdb" target="lib\net451\Prism.Commands.Async.pdb" />
-		<file src="..\bin\Release\Prism.Commands.Async.dll" target="lib\net452\Prism.Commands.Async.dll" />
-        <file src="..\bin\Release\Prism.Commands.Async.pdb" target="lib\net452\Prism.Commands.Async.pdb" />
+        <file src="..\src\Prism.Commands.Async\bin\Release\Prism.Commands.Async.dll" target="lib\net451\Prism.Commands.Async.dll" />
+        <file src="..\src\Prism.Commands.Async\bin\Release\Prism.Commands.Async.pdb" target="lib\net451\Prism.Commands.Async.pdb" />
+		<file src="..\src\Prism.Commands.Async\bin\Release\Prism.Commands.Async.dll" target="lib\net452\Prism.Commands.Async.dll" />
+        <file src="..\src\Prism.Commands.Async\bin\Release\Prism.Commands.Async.pdb" target="lib\net452\Prism.Commands.Async.pdb" />
     </files>
 </package>

@@ -1,2 +1,2 @@
-nuget push -Source "KillionPackages" -ApiKey VSTS Prism.Commands.Async.1.0.0.nupkg
+nuget push -Source "KillionPackages" -ApiKey VSTS Prism.Commands.Async.2.1.2.nupkg
 pause

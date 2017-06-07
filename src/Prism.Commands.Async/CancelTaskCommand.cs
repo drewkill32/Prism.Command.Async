@@ -8,17 +8,14 @@ namespace Prism.Commands.Async
 {
     public sealed class CancelTaskCommand : ICommand, INotifyPropertyChanged
     {
+        #region Private Fields
 
-
-        private CancellationTokenSource cts = new CancellationTokenSource();
         private bool commandExecuting;
+        private CancellationTokenSource cts = new CancellationTokenSource();
 
+        #endregion Private Fields
 
-        public CancelTaskCommand()
-        {
-        }
-
-
+        #region Public Properties
 
         public bool CommandExecuting
         {
@@ -34,24 +31,31 @@ namespace Prism.Commands.Async
             }
         }
 
-        public event EventHandler CanExecuteChanged;
-
         public CancellationToken Token => cts.Token;
 
-        public void NotifyCommandStarting()
-        {
-            CommandExecuting = true;
-            if (cts.IsCancellationRequested)
-                cts = new CancellationTokenSource();
-            RaiseCanExecuteChanged();
+        #endregion Public Properties
 
+        #region Public Constructors
+
+        public CancelTaskCommand()
+        {
         }
 
-        public void NotifyCommandFinished()
-        {
-            CommandExecuting = false;
+        #endregion Public Constructors
 
-            RaiseCanExecuteChanged();
+        #region Public Events
+
+        public event EventHandler CanExecuteChanged;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion Public Events
+
+        #region Public Methods
+
+        public void Cancel()
+        {
+            (this as ICommand).Execute(null);
         }
 
         bool ICommand.CanExecute(object parameter)
@@ -65,22 +69,35 @@ namespace Prism.Commands.Async
             RaiseCanExecuteChanged();
         }
 
-        public void Cancel()
+        public void NotifyCommandFinished()
         {
-            (this as ICommand).Execute(null);
+            CommandExecuting = false;
+
+            RaiseCanExecuteChanged();
         }
 
-        private void RaiseCanExecuteChanged()
+        public void NotifyCommandStarting()
         {
-            CanExecuteChanged?.Invoke(this,EventArgs.Empty);
+            CommandExecuting = true;
+            if (cts.IsCancellationRequested)
+                cts = new CancellationTokenSource();
+            RaiseCanExecuteChanged();
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        #endregion Public Methods
 
+        #region Private Methods
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion Private Methods
     }
 }

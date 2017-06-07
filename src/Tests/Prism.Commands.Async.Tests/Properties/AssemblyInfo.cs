@@ -2,18 +2,18 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Common.Tasks.Tests")]
+[assembly: AssemblyTitle("Prism.Commands.Async.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Common.Tasks.Tests")]
+[assembly: AssemblyProduct("Prism.Commands.Async.Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
 
-[assembly: Guid("91bce038-b28b-49d3-aede-16926bccf6bd")]
+[assembly: Guid("d07e93b9-cfb5-4186-8162-3cc04e51dfbd")]
 
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
